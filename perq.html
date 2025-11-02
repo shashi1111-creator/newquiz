@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ready Quiz Platform</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 800px; margin: 30px auto; padding: 20px;
+    background: linear-gradient(to right, #74ebd5, #acb6e5);
+    color: #333; position: relative;
+  }
+  h1,h2 { text-align:center; color:#222; }
+  #navButtons {
+    display:flex; justify-content:center; gap:15px; margin-bottom: 30px;
+  }
+  #navButtons button {
+    background-color:#5a8dee; border:none; color:white; font-weight:600;
+    font-size:18px; padding: 12px 25px; border-radius:8px; cursor:pointer;
+    transition: background 0.3s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  #navButtons button:hover { background-color:#3a6dde; }
+  #teacherLogin,#studentLogin,#adminSection,#quizSection {
+    background: white; padding: 30px 35px; border-radius: 15px;
+    box-shadow:0 6px 15px rgba(0,0,0,0.15); margin-bottom:30px;
+  }
+  label,input,select,button {
+    display:block; width: 100%; margin:12px 0 18px 0;
+  }
+  input,select {
+    padding: 12px 15px; font-size:16px; border: 2px solid #ddd;
+    border-radius: 8px; box-sizing: border-box;
+  }
+  input:focus, select:focus {
+    outline:none; border-color:#5a8dee; box-shadow: 0 0 8px #5a8dee88;
+  }
+  button {
+    background:#5a8dee; color:white; border-radius:10px;
+    font-weight:700; font-size:18px; padding:14px; cursor:pointer;
+    box-shadow: 0 6px 12px #3a6ddecc; transition: background-color 0.3s ease;
+  }
+  button:hover { background:#3a6dde; }
+  .question {
+    padding: 15px 20px; background: #eef2fb; margin-bottom: 20px;
+    border-radius: 10px; box-shadow: 0 4px 12px #c6d0fb;
+  }
+  .options label {
+    display: block; margin: 10px 0; cursor: pointer; font-size: 17px;
+    user-select:none;
+  }
+  .option-label::before {
+    content: attr(data-number) ". ";
+    font-weight: 600; color: #555;
+  }
+  #timer {
+    font-weight: 700; font-size: 22px; color: #dc3545;
+    text-align: center; margin-bottom: 25px; letter-spacing: 0.03em;
+  }
+  #result {
+    font-size: 24px; text-align: center; margin-top: 25px; font-weight: 700;
+    color: #28a745;
+  }
+  #questionsList p { font-size: 17px; font-weight: 600; color: #444; }
+  #successMsg {
+    color: #228a22; font-weight: 700; text-align: center; margin-bottom: 15px;
+  }
+  .nav-quiz-buttons {
+    display: flex; justify-content: space-between; margin-bottom: 15px;
+  }
+  .footer-ad {
+    position: fixed; bottom: 0; right: 0; background: #5a8dee;
+    color: white; padding: 12px 18px; font-weight: 700;
+    border-top-left-radius: 12px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select:none; box-shadow: -2px -2px 8px #3a6dde;
+  }
+</style>
+</head>
+<body>
+
+<h1>Ready Quiz Platform</h1>
+
+<div id="navButtons">
+  <button onclick="showLogin('teacher')">Teacher Login</button>
+  <button onclick="showLogin('student')">Student Login</button>
+</div>
+
+<!-- TEACHER LOGIN -->
+<div id="teacherLogin" style="display:none;">
+  <h2>Teacher Login</h2>
+  <input type="text" id="teacherUsername" placeholder="Username" />
+  <input type="password" id="teacherPassword" placeholder="Password" />
+  <button onclick="teacherLogin()">Login as Teacher</button>
+  <div id="teacherLoginMsg"></div>
+</div>
+
+<!-- TEACHER ADMIN PANEL -->
+<div id="adminSection" style="display:none;">
+  <h2>Admin - Add Questions</h2>
+  <div id="successMsg"></div>
+
+  <label>Question Text:</label>
+  <input type="text" id="admin_questionTxt" placeholder="Enter question" />
+  <label>Option A:</label><input type="text" id="optA" />
+  <label>Option B:</label><input type="text" id="optB" />
+  <label>Option C:</label><input type="text" id="optC" />
+  <label>Option D:</label><input type="text" id="optD" />
+  <label>Correct Option:</label>
+  <select id="correctOpt">
+    <option value="A">Option A</option>
+    <option value="B">Option B</option>
+    <option value="C">Option C</option>
+    <option value="D">Option D</option>
+  </select>
+
+  <label>Quiz Duration (seconds):</label>
+  <input type="number" id="quizDuration" value="60" min="10" max="600" />
+
+  <label>Negative Marking per wrong:</label>
+  <input type="number" id="negativeMarking" value="1" min="0" max="5" />
+
+  <button onclick="addQuestion()">Add Question</button>
+
+  <h3>Questions Added</h3>
+  <div id="questionsList"></div>
+
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- STUDENT LOGIN -->
+<div id="studentLogin" style="display:none;">
+  <h2>Student Login</h2>
+  <input type="text" id="studentUsername" placeholder="Username" />
+  <input type="password" id="studentPassword" placeholder="Password" />
+  <button onclick="studentLogin()">Login as Student</button>
+  <div id="studentLoginMsg"></div>
+</div>
+
+<!-- QUIZ SECTION -->
+<div id="quizSection" style="display:none;">
+  <h2>Student Quiz</h2>
+  <div id="timer"></div>
+  <div class="nav-quiz-buttons">
+    <button id="prevBtn" onclick="prevQuestion()">Previous</button>
+    <button id="nextBtn" onclick="nextQuestion()">Next</button>
+  </div>
+  <form id="quizForm"></form>
+  <button id="submitBtn" onclick="submitQuiz()">Submit Quiz</button>
+  <div id="result"></div>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<div class="footer-ad">Shashi Developments</div>
+
+<script>
+  const TEACHER_USERNAME = 'teacher';
+  const TEACHER_PASSWORD = 'password123';
+  const STUDENT_USERNAME = 'student';
+  const STUDENT_PASSWORD = 'student123';
+
+  let questions = [];
+  let quizDuration = 60;
+  let negativeMarking = 1;
+  let timerInterval;
+  let timeLeft = 0;
+  let currentQuestionIndex = 0;
+  let quizSubmitted = false;
+  let studentAnswers = [];
+
+  // ======== SHOW LOGIN ========
+  function showLogin(userType) {
+    hideAllSections();
+    clearMessages();
+    if (userType === 'teacher') document.getElementById('teacherLogin').style.display = 'block';
+    if (userType === 'student') document.getElementById('studentLogin').style.display = 'block';
+  }
+
+  function hideAllSections() {
+    ['teacherLogin','studentLogin','adminSection','quizSection']
+      .forEach(id => document.getElementById(id).style.display = 'none');
+  }
+
+  function clearMessages() {
+    document.getElementById('teacherLoginMsg').innerText = '';
+    document.getElementById('studentLoginMsg').innerText = '';
+    document.getElementById('successMsg').innerText = '';
+    document.getElementById('result').innerText = '';
+  }
+
+  // ======== TEACHER LOGIN ========
+  function teacherLogin() {
+    const u = document.getElementById('teacherUsername').value.trim();
+    const p = document.getElementById('teacherPassword').value.trim();
+    if (u === TEACHER_USERNAME && p === TEACHER_PASSWORD) {
+      hideAllSections();
+      document.getElementById('adminSection').style.display = 'block';
+    } else {
+      document.getElementById('teacherLoginMsg').innerText = 'Invalid teacher username or password!';
+    }
+  }
+
+  // ======== STUDENT LOGIN ========
+  function studentLogin() {
+    const u = document.getElementById('studentUsername').value.trim();
+    const p = document.getElementById('studentPassword').value.trim();
+    if (u === STUDENT_USERNAME && p === STUDENT_PASSWORD) {
+      if (questions.length === 0) {
+        alert('No quiz available! Teacher must add questions first.');
+        return;
+      }
+      hideAllSections();
+      document.getElementById('quizSection').style.display = 'block';
+      clearMessages();
+      currentQuestionIndex = 0;
+      quizSubmitted = false;
+      studentAnswers = [];
+      renderQuestion(currentQuestionIndex);
+      startTimer();
+    } else {
+      document.getElementById('studentLoginMsg').innerText = 'Invalid student username or password!';
+    }
+  }
+
+  // ======== ADD QUESTION ========
+  function addQuestion() {
+    const qTxt = document.getElementById('admin_questionTxt').value.trim();
+    const a = document.getElementById('optA').value.trim();
+    const b = document.getElementById('optB').value.trim();
+    const c = document.getElementById('optC').value.trim();
+    const d = document.getElementById('optD').value.trim();
+    const correct = document.getElementById('correctOpt').value;
+
+    if (!qTxt || !a || !b || !c || !d) {
+      alert('Please fill all question fields!');
+      return;
+    }
+
+    questions.push({ questionText: qTxt, optionA: a, optionB: b, optionC: c, optionD: d, correctOption: correct });
+    quizDuration = parseInt(document.getElementById('quizDuration').value) || 60;
+    negativeMarking = parseInt(document.getElementById('negativeMarking').value) || 1;
+
+    displayQuestions();
+    clearAdminInputs();
+    document.getElementById('successMsg').innerText = 'Question added successfully!';
+    setTimeout(()=> document.getElementById('successMsg').innerText='',2000);
+  }
+
+  function clearAdminInputs(){
+    ['admin_questionTxt','optA','optB','optC','optD'].forEach(id => document.getElementById(id).value='');
+  }
+
+  function displayQuestions(){
+    const div = document.getElementById('questionsList');
+    div.innerHTML = '';
+    questions.forEach((q,i)=> div.innerHTML += `<p><strong>Q${i+1}:</strong> ${q.questionText}</p>`);
+  }
+
+  // ======== RENDER QUESTION ========
+  function renderQuestion(index){
+    const quizForm = document.getElementById('quizForm');
+    quizForm.innerHTML = '';
+    const q = questions[index];
+    if(!q) return;
+    quizForm.innerHTML = `
+      <div class="question">
+        <p><strong>Q${index+1}:</strong> ${q.questionText}</p>
+        <div class="options">
+          ${['A','B','C','D'].map((opt,i)=>
+            `<label class="option-label" data-number="${i+1}">
+              <input type="radio" name="q${index}" value="${opt}" ${studentAnswers[index]===opt?'checked':''} ${quizSubmitted?'disabled':''}/> ${q['option'+opt]}
+            </label>`).join('')}
+        </div>
+      </div>`;
+    updateNavButtons();
+  }
+
+  function updateNavButtons(){
+    document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+    document.getElementById('nextBtn').disabled = currentQuestionIndex === questions.length - 1;
+  }
+
+  function saveCurrentAnswer(){
+    const checked = document.querySelector('input[name="q'+currentQuestionIndex+'"]:checked');
+    studentAnswers[currentQuestionIndex] = checked ? checked.value : null;
+  }
+
+  function nextQuestion(){
+    saveCurrentAnswer();
+    if(currentQuestionIndex < questions.length-1){
+      currentQuestionIndex++;
+      renderQuestion(currentQuestionIndex);
+    }
+  }
+
+  function prevQuestion(){
+    saveCurrentAnswer();
+    if(currentQuestionIndex>0){
+      currentQuestionIndex--;
+      renderQuestion(currentQuestionIndex);
+    }
+  }
+
+  // ======== TIMER ========
+  function startTimer(){
+    clearInterval(timerInterval);
+    timeLeft = quizDuration;
+    const timerEl = document.getElementById('timer');
+    timerEl.innerText = `Time Left: ${timeLeft}s`;
+    timerInterval = setInterval(()=>{
+      timeLeft--;
+      timerEl.innerText = `Time Left: ${timeLeft}s`;
+      if(timeLeft<=0){
+        clearInterval(timerInterval);
+        submitQuiz();
+      }
+    },1000);
+  }
+
+  // ======== SUBMIT QUIZ ========
+  function submitQuiz(){
+    if(quizSubmitted) return;
+    saveCurrentAnswer();
+    clearInterval(timerInterval);
+
+    let score = 0;
+    let report = 'Quiz Report\n==============================\n';
+
+    questions.forEach((q,idx)=>{
+      const ans = studentAnswers[idx];
+      const correct = q.correctOption;
+      const isCorrect = ans === correct;
+      if(ans){
+        score += isCorrect ? 4 : -negativeMarking;
+      }
+      report += `Q${idx+1}: ${q.questionText}\nYour Answer: ${ans||'No Answer'}\nCorrect Answer: ${correct}\nResult: ${isCorrect?'Correct':'Wrong'}\n\n`;
+    });
+
+    quizSubmitted = true;
+    document.getElementById('result').innerText = `Your Score: ${score}`;
+    document.getElementById('submitBtn').disabled = true;
+    renderQuestion(currentQuestionIndex);
+    alert('Quiz submitted successfully!');
+    downloadReport(report);
+  }
+
+  function downloadReport(text){
+    const a = document.createElement('a');
+    const file = new Blob([text],{type:'text/plain'});
+    a.href = URL.createObjectURL(file);
+    a.download = 'quiz_report.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // ======== LOGOUT ========
+  function logout(){
+    clearInterval(timerInterval);
+    quizSubmitted=false;
+    currentQuestionIndex=0;
+    studentAnswers=[];
+    document.getElementById('submitBtn').disabled=false;
+    hideAllSections();
+    showLogin('teacher');
+  }
+
+  // Show teacher login first
+  showLogin('teacher');
+</script>
+
+</body>
+</html>
+
